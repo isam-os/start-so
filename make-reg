@@ -1,0 +1,33 @@
+#!/bin/sh
+
+#получиние регионов директории
+#echo >fcs_regions.lftp
+
+echo open ftp://free:free@ftp.zakupki.gov.ru:21 > fcs_regions.lftp
+echo cd fcs_regions >> fcs_regions.lftp
+echo find -d 2 -l \> ./_01_dir_regions >> fcs_regions.lftp
+echo exit >> fcs_regions.lftp
+
+
+#качаем директории регионов - названия !
+lftp -f ./fcs_regions.lftp
+
+cat ./_01_dir_regions | grep "^d.*" >./_02_ddir_regions
+
+
+#make создаем директории регионов - выидываем явно не относящиеся к регионам !!
+cat ./_02_ddir_regions | cut -f 2 -d '.' > ./_03_notifications
+cat ./_03_notifications | cut -f 2 -d '/'|grep -v "_logs\|control99docs\|fcs_undefined\|^$\|PG-PZ" > ./031_notifications
+
+
+
+
+
+
+
+
+
+
+
+
+exit
