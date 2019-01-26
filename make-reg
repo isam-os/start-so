@@ -1,33 +1,39 @@
 #!/bin/sh
 
-#получиние регионов директории
-#echo >fcs_regions.lftp
+# подготовка всех каталогов для сканирования файлов
+# будем сканировать каждый регион в свой файл !
+#формировать будем с вложенными директориями - курент и превиосли месяцы
+#echo $(date +"%y-%m-%d %T")
 
-echo open ftp://free:free@ftp.zakupki.gov.ru:21 > fcs_regions.lftp
-echo cd fcs_regions >> fcs_regions.lftp
-echo find -d 2 -l \> ./_01_dir_regions >> fcs_regions.lftp
-echo exit >> fcs_regions.lftp
-
-
-#качаем директории регионов - названия !
-lftp -f ./fcs_regions.lftp
-
-cat ./_01_dir_regions | grep "^d.*" >./_02_ddir_regions
+#в папку регионов почистить все файлы
+for i in `cat ./031_notifications`; do
+  cat /dev/null > ./regions/${i}
+  cat /dev/null > ./regions/${i}_currMonth
+  cat /dev/null > ./regions/${i}_prevMonth
+done
 
 
-#make создаем директории регионов - выидываем явно не относящиеся к регионам !!
-cat ./_02_ddir_regions | cut -f 2 -d '.' > ./_03_notifications
-cat ./_03_notifications | cut -f 2 -d '/'|grep -v "_logs\|control99docs\|fcs_undefined\|^$\|PG-PZ" > ./031_notifications
+#формирование файла для закачивания инфы по всем регионам
+
+#cat /dev/null > ./05_scan_notif.lftp
+echo open ftp://free:free@ftp.zakupki.gov.ru:21  > ./05_scan_notif.lftp;
+for i in `cat ./031_notifications`; do
+
+  echo cd /fcs_regions/${i}/notifications/ >> ./05_scan_notif.lftp;
+  echo find -d 2 -l \>\> ./regions/${i} >> ./05_scan_notif.lftp;
+
+  echo cd /fcs_regions/${i}/notifications/currMonth >> ./05_scan_notif.lftp;
+  echo find -d 2 -l \>\> ./regions/${i}_currMonth >> ./05_scan_notif.lftp;
+
+  echo cd /fcs_regions/${i}/notifications/prevMonth >> ./05_scan_notif.lftp;
+  echo find -d 2 -l \>\> ./regions/${i}_prevMonth >> ./05_scan_notif.lftp;
+
+done
+
+echo exit  >> ./05_scan_notif.lftp;
+
+lftp -f ./05_scan_notif.lftp
+
+##cat ./regions/* |grep "^-rw.*2018.*" > iv
 
 
-
-
-
-
-
-
-
-
-
-
-exit
